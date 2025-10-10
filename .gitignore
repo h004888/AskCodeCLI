@@ -1,0 +1,72 @@
+# ============================================
+# Node.js / npm / yarn
+# ============================================
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# ============================================
+# Environment / API Keys
+# ============================================
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# ============================================
+# Build / Output / Temporary
+# ============================================
+dist/
+build/
+tmp/
+temp/
+logs/
+*.log
+
+# ============================================
+# OS-specific files
+# ============================================
+.DS_Store
+Thumbs.db
+ehthumbs.db
+Icon?
+desktop.ini
+
+# ============================================
+# VS Code / JetBrains IDEs
+# ============================================
+.vscode/
+.idea/
+*.iml
+
+# ============================================
+# RAG / Vector DB data
+# ============================================
+data/
+db/
+embeddings/
+vectorstore/
+*.sqlite
+*.db
+
+# ============================================
+# Test / Coverage
+# ============================================
+coverage/
+.nyc_output/
+jest/
+__tests__/
+*.test.js
+*.spec.js
+
+# ============================================
+# CLI build / compiled binaries (nếu có)
+# ============================================
+bin/
+out/
