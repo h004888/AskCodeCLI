@@ -16,6 +16,23 @@ async function dbConnect() {
 }
 
 // ===========================
+// 🔹 Hàm xóa và tạo mới Collection
+// ===========================
+async function deleteAndCreateCollection() {
+    const client = await dbConnect();
+    try {
+        await client.deleteCollection({ name: COLLECTION_NAME });
+        console.log(`🗑️  Đã xóa collection cũ "${COLLECTION_NAME}".`);
+    } catch (err) {
+        // Bỏ qua lỗi nếu collection không tồn tại
+        console.log(`ℹ️  Collection cũ không tồn tại, sẽ được tạo mới.`);
+    }
+    await client.createCollection({ name: COLLECTION_NAME });
+    console.log(`✨ Tạo mới collection "${COLLECTION_NAME}"`);
+}
+
+
+// ===========================
 // 🔹 Hàm lưu dữ liệu đa luồng
 // ===========================
 async function saveToChromaMultiThread(embeddingData) {
@@ -42,7 +59,7 @@ async function saveToChromaMultiThread(embeddingData) {
         const batch = embeddingResult.slice(i, i + BATCH_SIZE);
 
         console.log(
-            `⚙️ Đang xử lý batch ${i / BATCH_SIZE + 1}/${Math.ceil(
+            `⚙️  Đang xử lý batch ${i / BATCH_SIZE + 1}/${Math.ceil(
                 embeddingResult.length / BATCH_SIZE
             )} ...`
         );
@@ -77,7 +94,7 @@ async function searchCode(question, topK = 5) {
         nResults: topK,
     });
 
-    console.log(`🔍 Kết quả tìm kiếm cho: "${question}"\n`);
+    console.log(`\n🔍 Kết quả tìm kiếm cho: "${question}"\n`);
 
     const documents = results.documents[0];
     const metadatas = results.metadatas[0];
@@ -93,4 +110,4 @@ async function searchCode(question, topK = 5) {
 }
 
 // Thay đổi export default thành named exports
-export { saveToChromaMultiThread, dbConnect, searchCode };
+export { saveToChromaMultiThread, dbConnect, searchCode, deleteAndCreateCollection };

@@ -1,30 +1,17 @@
-import fs from 'fs';
+import fs from 'fs/promises';
 import path from 'path';
+import os from 'os';
 
-// const allowedExtensions = [
-//   '.html', '.htm', '.xhtml', '.css', '.scss', '.sass', '.less',
-//   '.js', '.jsx', '.ts', '.tsx', '.vue', '.svelte',
-//   '.java', '.kt', '.kts', '.groovy', '.scala', '.clj', '.cljs',
-//   '.py', '.pyw', '.ipynb', '.c', '.cpp', '.cc', '.cxx', '.h', '.hpp', '.cs',
-//   '.rs', '.go', '.zig', '.php', '.phtml', '.php3', '.php4', '.php5', '.phps',
-//   '.rb', '.rake', '.erb', '.pl', '.pm', '.swift', '.m', '.mm',
-//   '.sh', '.bash', '.zsh', '.bat', '.cmd', '.ps1',
-//   '.json', '.yaml', '.yml', '.xml', '.ini', '.cfg', '.toml', '.env',
-//   '.sql', '.psql', '.proto', '.thrift', '.graphql', '.gql',
-//   '.r', '.jl', '.ipynb', '.dart', '.lua', '.hs', '.erl', '.ex', '.exs',
-//   '.fs', '.fsi', '.fsx', '.vb', '.vbs', '.pas', '.asm',
-//   '.gradle', '.makefile', '.mk', '.dockerfile', '.md', '.markdown'
-// ];
+// Danh sách phần mở rộng được phép
+const allowedExtensions = ['.html', '.js', '.ts','.vue'];
 
-const allowedExtensions = ['.html']
-
-// Kiểm tra phần mở rộng hợp lệ
+// ✅ Kiểm tra phần mở rộng hợp lệ
 function hasAllowedExtension(filePath) {
   const ext = path.extname(filePath).toLowerCase();
   return allowedExtensions.includes(ext);
 }
 
-// ✅ Hàm chia nhỏ nội dung code thành chunk
+// ✅ Chia nhỏ nội dung code thành chunk
 function chunkContent(content, filePath, chunkSize = 10000) {
   const chunks = [];
   const totalChunks = Math.ceil(content.length / chunkSize);
@@ -32,52 +19,92 @@ function chunkContent(content, filePath, chunkSize = 10000) {
   for (let i = 0; i < totalChunks; i++) {
     const start = i * chunkSize;
     const end = start + chunkSize;
-    const chunkContent = content.slice(start, end);
-
     chunks.push({
       path: filePath,
       chunkIndex: i,
-      content: chunkContent,
+      content: content.slice(start, end),
     });
   }
-
   return chunks;
 }
 
-// ✅ Đọc tất cả file và chunk nếu cần
- async function readAllFilesAndChunk(dirPath, results = []) {
-  if (!fs.existsSync(dirPath)) {
-    console.error('❌ Folder không tồn tại:', dirPath);
-    return results;
-  }
+// ===============================================
+// 🧵 Hàm phụ: giới hạn số lượng tác vụ chạy song song
+// ===============================================
+async function withConcurrencyLimit(tasks, limit = os.cpus().length * 10) {
+  const results = [];
+  let index = 0;
 
-  const files = fs.readdirSync(dirPath);
-
-  for (const file of files) {
-    const filePath = path.join(dirPath, file);
-    const stat = fs.statSync(filePath);
-
-    if (stat.isDirectory()) {
-      readAllFilesAndChunk(filePath, results);
-    } else {
-      if (!hasAllowedExtension(filePath)) continue;
-
+  async function worker() {
+    while (index < tasks.length) {
+      const i = index++;
       try {
-        const content = fs.readFileSync(filePath, 'utf8');
-        if (content.length > 1000) {
-          const chunks = chunkContent(content, filePath);
-          results.push(...chunks);
-        } else {
-          results.push({ path: filePath, chunkIndex: 0, content });
-        }
-      } catch (error) {
-        console.error(`⚠️ Không đọc được file ${filePath}:`, error.message);
+        const res = await tasks[i]();
+        if (res) results.push(...res);
+      } catch (err) {
+        console.error(`⚠️ Lỗi xử lý file:`, err.message);
       }
     }
   }
 
+  await Promise.all(Array.from({ length: limit }, () => worker()));
   return results;
 }
 
-export default readAllFilesAndChunk;
+// ===============================================
+// ✅ Hàm chính: đọc toàn bộ file và chunk song song
+// ===============================================
+async function readAllFilesAndChunk(dirPath) {
+  async function walkDirectory(dir) {
+    const entries = await fs.readdir(dir, { withFileTypes: true });
+    const allFiles = [];
 
+    for (const entry of entries) {
+      const fullPath = path.join(dir, entry.name);
+      if (entry.isDirectory()) {
+        allFiles.push(...(await walkDirectory(fullPath)));
+      } else if (hasAllowedExtension(fullPath)) {
+        allFiles.push(fullPath);
+      }
+    }
+
+    return allFiles;
+  }
+
+  // 🔍 Quét toàn bộ thư mục
+  console.log('🔍 Đang quét thư mục:', dirPath);
+  let allFiles = [];
+  try {
+    allFiles = await walkDirectory(dirPath);
+  } catch (err) {
+    console.error('❌ Không thể đọc thư mục:', err.message);
+    return [];
+  }
+
+  console.log(`📁 Tìm thấy ${allFiles.length} file cần xử lý`);
+
+  // Tạo danh sách task song song
+  const tasks = allFiles.map((filePath) => async () => {
+    try {
+      const content = await fs.readFile(filePath, 'utf8');
+      if (content.length > 1000) {
+        const chunks = chunkContent(content, filePath);
+        return chunks;
+      } else {
+        console.log(`📄 Đã đọc file ${filePath} (${content.length} ký tự)`);
+        return [{ path: filePath, chunkIndex: 0, content }];
+      }
+    } catch (err) {
+      console.error(`⚠️ Không đọc được file ${filePath}:`, err.message);
+      return [];
+    }
+  });
+
+  // 🧠 Chạy song song với giới hạn CPU
+  const allChunks = await withConcurrencyLimit(tasks);
+
+  console.log(`✅ Hoàn tất đọc & chunk ${allChunks.length} đoạn code`);
+  return allChunks;
+}
+
+export default readAllFilesAndChunk;
