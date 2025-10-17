@@ -1,0 +1,2009 @@
+[
+  {
+    "file": "C:\\Users\\ADMIN\\Documents\\FlowerShop\\FlowerShop\\src\\main\\java\\com\\flowerShop\\config\\SecurityConfig.java",
+    "language": "java",
+    "data": [
+      {
+        "type": "method",
+        "name": "passwordEncoder",
+        "startLine": 27,
+        "endLine": 30,
+        "docstring": "",
+        "code": "@Bean\r\n    public PasswordEncoder passwordEncoder() {\r\n        return NoOpPasswordEncoder.getInstance();\r\n    }",
+        "imports": [
+          "com.flowerShop.service.security.CustomUserDetailsService",
+          "org.springframework.context.annotation.Bean",
+          "org.springframework.context.annotation.Configuration",
+          "org.springframework.security.authentication.AuthenticationManager",
+          "org.springframework.security.authentication.ProviderManager",
+          "org.springframework.security.authentication.dao.DaoAuthenticationProvider",
+          "org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration",
+          "org.springframework.security.config.annotation.web.builders.HttpSecurity",
+          "org.springframework.security.config.annotation.web.configuration.EnableWebSecurity",
+          "org.springframework.security.crypto.password.NoOpPasswordEncoder",
+          "org.springframework.security.crypto.password.PasswordEncoder",
+          "org.springframework.security.web.SecurityFilterChain"
+        ],
+        "language": "java"
+      },
+      {
+        "type": "method",
+        "name": "authenticationManager",
+        "startLine": 33,
+        "endLine": 39,
+        "docstring": "",
+        "code": "@Bean\r\n    public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {\r\n        DaoAuthenticationProvider provider = new DaoAuthenticationProvider();\r\n        provider.setUserDetailsService(userDetailsService);\r\n        provider.setPasswordEncoder(passwordEncoder());\r\n        return new ProviderManager(provider);\r\n    }",
+        "imports": [
+          "com.flowerShop.service.security.CustomUserDetailsService",
+          "org.springframework.context.annotation.Bean",
+          "org.springframework.context.annotation.Configuration",
+          "org.springframework.security.authentication.AuthenticationManager",
+          "org.springframework.security.authentication.ProviderManager",
+          "org.springframework.security.authentication.dao.DaoAuthenticationProvider",
+          "org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration",
+          "org.springframework.security.config.annotation.web.builders.HttpSecurity",
+          "org.springframework.security.config.annotation.web.configuration.EnableWebSecurity",
+          "org.springframework.security.crypto.password.NoOpPasswordEncoder",
+          "org.springframework.security.crypto.password.PasswordEncoder",
+          "org.springframework.security.web.SecurityFilterChain"
+        ],
+        "language": "java"
+      },
+      {
+        "type": "method",
+        "name": "filterChain",
+        "startLine": 41,
+        "endLine": 65,
+        "docstring": "",
+        "code": "@Bean\r\n    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {\r\n        http\r\n                .csrf(csrf -> csrf.disable()) // cho đơn giản demo; bật lại CSRF khi cần\r\n                .authorizeHttpRequests(auth -> auth\r\n                        .anyRequest().permitAll()\r\n                )\r\n                .formLogin(form -> form\r\n                        .loginPage(\"/login\")                 // Trang login custom\r\n                        .loginProcessingUrl(\"/login\")        // URL form submit\r\n                        .usernameParameter(\"email\")          // Dùng field email\r\n                        .passwordParameter(\"password\")       // Field password\r\n                        .defaultSuccessUrl(\"/\", true)        // Khi login thành công\r\n                        .failureUrl(\"/login?error=true\")     // Khi sai mật khẩu\r\n                        .permitAll()\r\n                )// disable default form login\r\n                .headers(headers -> headers.frameOptions(frame -> frame.disable())) // để mở H2 console\r\n                .logout(logout -> logout\r\n                        .logoutUrl(\"/logout\")\r\n                        .logoutSuccessUrl(\"/login?logout=true\")\r\n                        .permitAll()\r\n                );\r\n\r\n        return http.build();\r\n    }",
+        "imports": [
+          "com.flowerShop.service.security.CustomUserDetailsService",
+          "org.springframework.context.annotation.Bean",
+          "org.springframework.context.annotation.Configuration",
+          "org.springframework.security.authentication.AuthenticationManager",
+          "org.springframework.security.authentication.ProviderManager",
+          "org.springframework.security.authentication.dao.DaoAuthenticationProvider",
+          "org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration",
+          "org.springframework.security.config.annotation.web.builders.HttpSecurity",
+          "org.springframework.security.config.annotation.web.configuration.EnableWebSecurity",
+          "org.springframework.security.crypto.password.NoOpPasswordEncoder",
+          "org.springframework.security.crypto.password.PasswordEncoder",
+          "org.springframework.security.web.SecurityFilterChain"
+        ],
+        "language": "java"
+      }
+    ]
+  },
+  {
+    "file": "C:\\Users\\ADMIN\\Documents\\FlowerShop\\FlowerShop\\src\\main\\java\\com\\flowerShop\\controller\\client\\CartController.java",
+    "language": "java",
+    "data": [
+      {
+        "type": "method",
+        "name": "addToCart",
+        "startLine": 30,
+        "endLine": 53,
+        "docstring": "",
+        "code": "@GetMapping(\"/addToCart\")\r\n    @ResponseBody\r\n    public Map<String, Object> addToCart(@RequestParam(\"productId\") int productId,\r\n            @RequestParam(\"quantity\") int quantity, HttpServletRequest request, HttpServletResponse response) {\r\n        System.out.println(\"productId: \" + productId + \" quantity: \" + quantity);\r\n        Map<String, Object> responseData = new HashMap<>();\r\n        try {\r\n            Product product = productService.getProductById(productId);\r\n            if (product.getStockQuantity() < quantity) {\r\n                responseData.put(\"status\", \"error\");\r\n                responseData.put(\"message\", \"Not enough stock\");\r\n                return responseData;\r\n            }\r\n            cartService.addToCart(CartDTOMapper.entityToDto(product, quantity), request, response);\r\n        } catch (RuntimeException e) {\r\n            responseData.put(\"status\", \"error\");\r\n            responseData.put(\"message\", \"Add to cart failed\");\r\n            return responseData;\r\n        }\r\n\r\n        responseData.put(\"status\", \"success\");\r\n        responseData.put(\"message\", \"Add to cart successfully\");\r\n        return responseData;\r\n    }",
+        "imports": [
+          "com.flowerShop.dto.product.CartItemDTO",
+          "com.flowerShop.entity.Product",
+          "com.flowerShop.mapper.product.CartDTOMapper",
+          "com.flowerShop.service.cart.CartService",
+          "com.flowerShop.service.product.ProductService",
+          "jakarta.servlet.http.HttpServletRequest",
+          "jakarta.servlet.http.HttpServletResponse",
+          "org.springframework.beans.factory.annotation.Autowired",
+          "org.springframework.stereotype.Controller",
+          "org.springframework.ui.Model",
+          "org.springframework.web.bind.annotation",
+          "java.util.HashMap",
+          "java.util.Map",
+          "java.util.List",
+          "org.springframework.web.bind.annotation.GetMapping",
+          "org.springframework.web.bind.annotation.RequestParam"
+        ],
+        "language": "java"
+      },
+      {
+        "type": "method",
+        "name": "getCart",
+        "startLine": 55,
+        "endLine": 59,
+        "docstring": "",
+        "code": "@GetMapping(\"/showCart\")\r\n    public String getCart(HttpServletRequest request, Model model) {\r\n        model.addAttribute(\"lsCart\", cartService.getlsCart(request));\r\n        return \"client/component/cartTable\";\r\n    }",
+        "imports": [
+          "com.flowerShop.dto.product.CartItemDTO",
+          "com.flowerShop.entity.Product",
+          "com.flowerShop.mapper.product.CartDTOMapper",
+          "com.flowerShop.service.cart.CartService",
+          "com.flowerShop.service.product.ProductService",
+          "jakarta.servlet.http.HttpServletRequest",
+          "jakarta.servlet.http.HttpServletResponse",
+          "org.springframework.beans.factory.annotation.Autowired",
+          "org.springframework.stereotype.Controller",
+          "org.springframework.ui.Model",
+          "org.springframework.web.bind.annotation",
+          "java.util.HashMap",
+          "java.util.Map",
+          "java.util.List",
+          "org.springframework.web.bind.annotation.GetMapping",
+          "org.springframework.web.bind.annotation.RequestParam"
+        ],
+        "language": "java"
+      },
+      {
+        "type": "method",
+        "name": "viewCart",
+        "startLine": 61,
+        "endLine": 64,
+        "docstring": "",
+        "code": "@GetMapping(\"\")\r\n    public String viewCart(Model model) {\r\n        return \"client/cart\";\r\n    }",
+        "imports": [
+          "com.flowerShop.dto.product.CartItemDTO",
+          "com.flowerShop.entity.Product",
+          "com.flowerShop.mapper.product.CartDTOMapper",
+          "com.flowerShop.service.cart.CartService",
+          "com.flowerShop.service.product.ProductService",
+          "jakarta.servlet.http.HttpServletRequest",
+          "jakarta.servlet.http.HttpServletResponse",
+          "org.springframework.beans.factory.annotation.Autowired",
+          "org.springframework.stereotype.Controller",
+          "org.springframework.ui.Model",
+          "org.springframework.web.bind.annotation",
+          "java.util.HashMap",
+          "java.util.Map",
+          "java.util.List",
+          "org.springframework.web.bind.annotation.GetMapping",
+          "org.springframework.web.bind.annotation.RequestParam"
+        ],
+        "language": "java"
+      },
+      {
+        "type": "method",
+        "name": "getlsCart",
+        "startLine": 66,
+        "endLine": 70,
+        "docstring": "",
+        "code": "@GetMapping(\"/getlsCart\")\r\n    @ResponseBody\r\n    public List<CartItemDTO> getlsCart(HttpServletRequest request) {\r\n        return cartService.getlsCart(request);\r\n    }",
+        "imports": [
+          "com.flowerShop.dto.product.CartItemDTO",
+          "com.flowerShop.entity.Product",
+          "com.flowerShop.mapper.product.CartDTOMapper",
+          "com.flowerShop.service.cart.CartService",
+          "com.flowerShop.service.product.ProductService",
+          "jakarta.servlet.http.HttpServletRequest",
+          "jakarta.servlet.http.HttpServletResponse",
+          "org.springframework.beans.factory.annotation.Autowired",
+          "org.springframework.stereotype.Controller",
+          "org.springframework.ui.Model",
+          "org.springframework.web.bind.annotation",
+          "java.util.HashMap",
+          "java.util.Map",
+          "java.util.List",
+          "org.springframework.web.bind.annotation.GetMapping",
+          "org.springframework.web.bind.annotation.RequestParam"
+        ],
+        "language": "java"
+      },
+      {
+        "type": "method",
+        "name": "updateQuantity",
+        "startLine": 73,
+        "endLine": 78,
+        "docstring": "",
+        "code": "@GetMapping(\"/updateQuantity\")\r\n    public String updateQuantity(@RequestParam(\"productId\") int productId, @RequestParam(\"quantity\") int quantity, HttpServletRequest request, HttpServletResponse response, Model model) {\r\n        cartService.updateQuantity(productId, quantity, request, response);\r\n        model.addAttribute(\"lsCart\", cartService.getlsCart(request));\r\n        return \"client/component/cartTable\";\r\n    }",
+        "imports": [
+          "com.flowerShop.dto.product.CartItemDTO",
+          "com.flowerShop.entity.Product",
+          "com.flowerShop.mapper.product.CartDTOMapper",
+          "com.flowerShop.service.cart.CartService",
+          "com.flowerShop.service.product.ProductService",
+          "jakarta.servlet.http.HttpServletRequest",
+          "jakarta.servlet.http.HttpServletResponse",
+          "org.springframework.beans.factory.annotation.Autowired",
+          "org.springframework.stereotype.Controller",
+          "org.springframework.ui.Model",
+          "org.springframework.web.bind.annotation",
+          "java.util.HashMap",
+          "java.util.Map",
+          "java.util.List",
+          "org.springframework.web.bind.annotation.GetMapping",
+          "org.springframework.web.bind.annotation.RequestParam"
+        ],
+        "language": "java"
+      }
+    ]
+  },
+  {
+    "file": "C:\\Users\\ADMIN\\Documents\\FlowerShop\\FlowerShop\\src\\main\\java\\com\\flowerShop\\controller\\client\\HomeController.java",
+    "language": "java",
+    "data": [
+      {
+        "type": "method",
+        "name": "getHome",
+        "startLine": 23,
+        "endLine": 37,
+        "docstring": "",
+        "code": "@GetMapping(\"\")\r\n    public String getHome(Model model, Authentication authentication) {\r\n        if (authentication == null) {\r\n            System.out.println(\"[DEBUG] ⚠️ Authentication is NULL in Controller\");\r\n        } else {\r\n            System.out.println(\"[DEBUG] 🔍 Controller Authentication class = \" + authentication.getClass().getName());\r\n            System.out.println(\"[DEBUG] 🔍 Controller Principal = \" + authentication.getPrincipal());\r\n        }\r\n        model.addAttribute(\"categories\", categoryService.getAllCategories().stream().limit(9).toList());\r\n        model.addAttribute(\"topSellingProducts\", orderDetailService.getTopSellingProducts().stream().limit(4).toList());\r\n        model.addAttribute(\"products\", productService.getAllProducts().stream().filter(product -> product.getCategory().getCategoryId()==1).toList());\r\n        System.out.println(\"[DEBUG] Products: \" + orderDetailService.getTrendingProducts().stream().limit(4).toList());\r\n        model.addAttribute(\"trendingProducts\", orderDetailService.getTrendingProducts().stream().limit(4).toList());\r\n        return \"client/index\";\r\n    }",
+        "imports": [
+          "com.flowerShop.service.category.CategoryService",
+          "com.flowerShop.service.orderDetail.OrderDetailService",
+          "com.flowerShop.service.product.ProductService",
+          "org.springframework.beans.factory.annotation.Autowired",
+          "org.springframework.security.core.Authentication",
+          "org.springframework.stereotype.Controller",
+          "org.springframework.ui.Model",
+          "org.springframework.web.bind.annotation.GetMapping",
+          "org.springframework.web.bind.annotation.RequestMapping"
+        ],
+        "language": "java"
+      }
+    ]
+  },
+  {
+    "file": "C:\\Users\\ADMIN\\Documents\\FlowerShop\\FlowerShop\\src\\main\\java\\com\\flowerShop\\controller\\client\\LoginController.java",
+    "language": "java",
+    "data": [
+      {
+        "type": "method",
+        "name": "showLoginForm",
+        "startLine": 23,
+        "endLine": 39,
+        "docstring": "",
+        "code": "@GetMapping(\"\")\r\n    public String showLoginForm(@RequestParam(value = \"error\", required = false) String error,\r\n                                @RequestParam(value = \"logout\", required = false) String logout,\r\n                                Model model) {\r\n\r\n        UserLoginDTO dto = new UserLoginDTO();\r\n        model.addAttribute(\"userLoginDTO\", dto);\r\n\r\n        if (error != null) {\r\n            model.addAttribute(\"loginError\", \"Sai email hoặc mật khẩu!\");\r\n        }\r\n        if (logout != null) {\r\n            model.addAttribute(\"logoutMessage\", \"Bạn đã đăng xuất thành công!\");\r\n        }\r\n\r\n        return \"client/login\";\r\n    }",
+        "imports": [
+          "com.flowerShop.dto.user.UserLoginDTO",
+          "com.flowerShop.entity.User",
+          "jakarta.servlet.http.HttpServletRequest",
+          "jakarta.servlet.http.HttpSession",
+          "jakarta.validation.Valid",
+          "org.springframework.http.HttpRequest",
+          "org.springframework.security.authentication",
+          "org.springframework.security.core.Authentication",
+          "org.springframework.security.core.context.SecurityContext",
+          "org.springframework.security.core.context.SecurityContextHolder",
+          "org.springframework.stereotype.Controller",
+          "org.springframework.ui.Model",
+          "org.springframework.validation.BindingResult",
+          "org.springframework.web.bind.annotation"
+        ],
+        "language": "java"
+      }
+    ]
+  },
+  {
+    "file": "C:\\Users\\ADMIN\\Documents\\FlowerShop\\FlowerShop\\src\\main\\java\\com\\flowerShop\\controller\\client\\ProductDetailController.java",
+    "language": "java",
+    "data": [
+      {
+        "type": "method",
+        "name": "getProductDetail",
+        "startLine": 18,
+        "endLine": 27,
+        "docstring": "",
+        "code": "@GetMapping(\"/{productId}\")\r\n    public String getProductDetail(@PathVariable(\"productId\") int productId , Model model) {\r\n        try {\r\n            model.addAttribute(\"product\", productService.getProductById(productId));\r\n\r\n        } catch (RuntimeException e) {\r\n            return \"redirect:/\";\r\n        }\r\n        return \"client/productDetail\";\r\n    }",
+        "imports": [
+          "com.flowerShop.service.product.ProductService",
+          "org.springframework.beans.factory.annotation.Autowired",
+          "org.springframework.stereotype.Controller",
+          "org.springframework.ui.Model",
+          "org.springframework.web.bind.annotation.GetMapping",
+          "org.springframework.web.bind.annotation.PathVariable",
+          "org.springframework.web.bind.annotation.RequestMapping"
+        ],
+        "language": "java"
+      }
+    ]
+  },
+  {
+    "file": "C:\\Users\\ADMIN\\Documents\\FlowerShop\\FlowerShop\\src\\main\\java\\com\\flowerShop\\controller\\client\\SignUpController.java",
+    "language": "java",
+    "data": [
+      {
+        "type": "method",
+        "name": "showSignUpForm",
+        "startLine": 21,
+        "endLine": 26,
+        "docstring": "",
+        "code": "@GetMapping(\"\")\r\n    public String showSignUpForm(Model model) {\r\n        UserSignUpDTO dto = new UserSignUpDTO();\r\n        model.addAttribute(\"userSignUpDTO\", dto);\r\n        return \"client/signUp\";\r\n    }",
+        "imports": [
+          "com.flowerShop.dto.user.UserSignUpDTO",
+          "com.flowerShop.mapper.user.UserSignUpMapper",
+          "com.flowerShop.service.user.UserService",
+          "jakarta.validation.Valid",
+          "org.springframework.beans.factory.annotation.Autowired",
+          "org.springframework.stereotype.Controller",
+          "org.springframework.ui.Model",
+          "org.springframework.validation.BindingResult",
+          "org.springframework.web.bind.annotation"
+        ],
+        "language": "java"
+      },
+      {
+        "type": "method",
+        "name": "signUp",
+        "startLine": 28,
+        "endLine": 42,
+        "docstring": "",
+        "code": "@PostMapping(\"\")\r\n        public String signUp(@Valid @ModelAttribute(\"userSignUpDTO\") UserSignUpDTO userSignUpDTO, BindingResult result,Model model) {\r\n            if (result.hasErrors()) {\r\n                return \"client/signUp\";\r\n            }\r\n            try {\r\n                userService.register(userSignUpDTO);\r\n                model.addAttribute(\"userSignUpDTO\", userSignUpDTO);\r\n                return \"client/otp\";\r\n\r\n            } catch (Exception e) {\r\n                model.addAttribute(\"errorMessage\", e.getMessage());\r\n            }\r\n            return \"client/signUp\";\r\n        }",
+        "imports": [
+          "com.flowerShop.dto.user.UserSignUpDTO",
+          "com.flowerShop.mapper.user.UserSignUpMapper",
+          "com.flowerShop.service.user.UserService",
+          "jakarta.validation.Valid",
+          "org.springframework.beans.factory.annotation.Autowired",
+          "org.springframework.stereotype.Controller",
+          "org.springframework.ui.Model",
+          "org.springframework.validation.BindingResult",
+          "org.springframework.web.bind.annotation"
+        ],
+        "language": "java"
+      },
+      {
+        "type": "method",
+        "name": "verifyOTP",
+        "startLine": 44,
+        "endLine": 53,
+        "docstring": "",
+        "code": "@PostMapping(\"/verify-otp\")\r\n        public String verifyOTP(@ModelAttribute(\"userSignUpDTO\") UserSignUpDTO userSignUpDTO, @RequestParam(\"otpInput\") String otp, Model model) {\r\n            System.out.println(\"[DEBUG] Verify OTP: \" + otp);\r\n            System.out.println(\"[DEBUG] User sign up: \" + userSignUpDTO);\r\n            if (userService.verifyOTP(userSignUpDTO, otp)) {\r\n                model.addAttribute(\"userLoginDTO\", userSignUpDTO);\r\n                return \"client/login\";\r\n            }\r\n            return \"client/signUp\";\r\n        }",
+        "imports": [
+          "com.flowerShop.dto.user.UserSignUpDTO",
+          "com.flowerShop.mapper.user.UserSignUpMapper",
+          "com.flowerShop.service.user.UserService",
+          "jakarta.validation.Valid",
+          "org.springframework.beans.factory.annotation.Autowired",
+          "org.springframework.stereotype.Controller",
+          "org.springframework.ui.Model",
+          "org.springframework.validation.BindingResult",
+          "org.springframework.web.bind.annotation"
+        ],
+        "language": "java"
+      }
+    ]
+  },
+  {
+    "file": "C:\\Users\\ADMIN\\Documents\\FlowerShop\\FlowerShop\\src\\main\\java\\com\\flowerShop\\controller\\UserController.java",
+    "language": "java",
+    "data": [
+      {
+        "type": "method",
+        "name": "getAllUsers",
+        "startLine": 23,
+        "endLine": 31,
+        "docstring": "",
+        "code": "@GetMapping()\r\n    public String getAllUsers(Model model) {\r\n        List<UserDTO> users = userService.getAllUsers().stream().map(userMapper::entityToDto).toList();\r\n        for (UserDTO user : users) {\r\n            System.out.println(user);\r\n        }\r\n        model.addAttribute(\"users\", users);\r\n        return \"index2222\";\r\n    }",
+        "imports": [
+          "com.flowerShop.dto.user.UserDTO",
+          "com.flowerShop.mapper.user.UserMapper",
+          "com.flowerShop.service.user.UserService",
+          "org.springframework.beans.factory.annotation.Autowired",
+          "org.springframework.stereotype.Controller",
+          "org.springframework.ui.Model",
+          "org.springframework.web.bind.annotation.GetMapping",
+          "org.springframework.web.bind.annotation.RequestMapping",
+          "java.util.List"
+        ],
+        "language": "java"
+      }
+    ]
+  },
+  {
+    "file": "C:\\Users\\ADMIN\\Documents\\FlowerShop\\FlowerShop\\src\\main\\java\\com\\flowerShop\\dto\\product\\CartItemDTO.java",
+    "language": "java",
+    "data": [
+      {
+        "type": "method",
+        "name": "getTotal",
+        "startLine": 18,
+        "endLine": 20,
+        "docstring": "",
+        "code": "public double getTotal() {\r\n        return price * quantityCart;\r\n    }",
+        "imports": [
+          "lombok"
+        ],
+        "language": "java"
+      }
+    ]
+  },
+  {
+    "file": "C:\\Users\\ADMIN\\Documents\\FlowerShop\\FlowerShop\\src\\main\\java\\com\\flowerShop\\FlowerShopApplication.java",
+    "language": "java",
+    "data": [
+      {
+        "type": "method",
+        "name": "main",
+        "startLine": 9,
+        "endLine": 11,
+        "docstring": "",
+        "code": "public static void main(String[] args) {\n        SpringApplication.run(FlowerShopApplication.class, args);\n    }",
+        "imports": [
+          "org.springframework.boot.SpringApplication",
+          "org.springframework.boot.autoconfigure.SpringBootApplication"
+        ],
+        "language": "java"
+      }
+    ]
+  },
+  {
+    "file": "C:\\Users\\ADMIN\\Documents\\FlowerShop\\FlowerShop\\src\\main\\java\\com\\flowerShop\\mapper\\product\\CartDTOMapper.java",
+    "language": "java",
+    "data": [
+      {
+        "type": "method",
+        "name": "entityToDto",
+        "startLine": 8,
+        "endLine": 18,
+        "docstring": "",
+        "code": "public static CartItemDTO entityToDto(Product entity, int quantity) {\r\n        CartItemDTO cartItemDTO = new CartItemDTO();\r\n        cartItemDTO.setProductId(entity.getProductId());\r\n        cartItemDTO.setProductName(entity.getProductName());\r\n        cartItemDTO.setImageUrl(entity.getImageUrl());\r\n        cartItemDTO.setPrice(entity.getPrice().doubleValue());\r\n        cartItemDTO.setStockQuantity(entity.getStockQuantity());\r\n        cartItemDTO.setTotal(entity.getPrice().doubleValue());\r\n        cartItemDTO.setQuantityCart(quantity);\r\n        return cartItemDTO;\r\n    }",
+        "imports": [
+          "com.flowerShop.dto.product.CartItemDTO",
+          "com.flowerShop.entity.Product"
+        ],
+        "language": "java"
+      }
+    ]
+  },
+  {
+    "file": "C:\\Users\\ADMIN\\Documents\\FlowerShop\\FlowerShop\\src\\main\\java\\com\\flowerShop\\mapper\\user\\UserLoginMapper.java",
+    "language": "java",
+    "data": [
+      {
+        "type": "method",
+        "name": "dtoToEntity",
+        "startLine": 7,
+        "endLine": 12,
+        "docstring": "",
+        "code": "public User dtoToEntity(UserLoginDTO dto) {\r\n        User user = new User();\r\n        user.setEmail(dto.getEmail());\r\n        user.setPasswordHash(dto.getPassword());\r\n        return user;\r\n    }",
+        "imports": [
+          "com.flowerShop.dto.user.UserLoginDTO",
+          "com.flowerShop.entity.User"
+        ],
+        "language": "java"
+      }
+    ]
+  },
+  {
+    "file": "C:\\Users\\ADMIN\\Documents\\FlowerShop\\FlowerShop\\src\\main\\java\\com\\flowerShop\\mapper\\user\\UserMapper.java",
+    "language": "java",
+    "data": [
+      {
+        "type": "method",
+        "name": "dtoToEntity",
+        "startLine": 10,
+        "endLine": 12,
+        "docstring": "",
+        "code": "public User dtoToEntity(UserDTO dto) {\r\n        return null;\r\n    }",
+        "imports": [
+          "com.flowerShop.dto.user.UserDTO",
+          "com.flowerShop.entity.User",
+          "org.springframework.context.annotation.Bean",
+          "org.springframework.stereotype.Component"
+        ],
+        "language": "java"
+      },
+      {
+        "type": "method",
+        "name": "entityToDto",
+        "startLine": 13,
+        "endLine": 25,
+        "docstring": "",
+        "code": "public UserDTO entityToDto(User dto) {\r\n        UserDTO userDTO = new UserDTO();\r\n        userDTO.setUserId(dto.getUserId());\r\n        userDTO.setFullName(dto.getFullName());\r\n        userDTO.setEmail(dto.getEmail());\r\n        userDTO.setPhone(dto.getPhone());\r\n        userDTO.setAddress(dto.getAddress());\r\n        userDTO.setRoleName(dto.getRole().getRoleName());\r\n        userDTO.setStatus(dto.getStatus());\r\n        userDTO.setCreatedAt(dto.getCreatedAt());\r\n        userDTO.setUpdatedAt(dto.getUpdatedAt());\r\n        return userDTO;\r\n    }",
+        "imports": [
+          "com.flowerShop.dto.user.UserDTO",
+          "com.flowerShop.entity.User",
+          "org.springframework.context.annotation.Bean",
+          "org.springframework.stereotype.Component"
+        ],
+        "language": "java"
+      }
+    ]
+  },
+  {
+    "file": "C:\\Users\\ADMIN\\Documents\\FlowerShop\\FlowerShop\\src\\main\\java\\com\\flowerShop\\mapper\\user\\UserSignUpMapper.java",
+    "language": "java",
+    "data": [
+      {
+        "type": "method",
+        "name": "dtoToEntity",
+        "startLine": 10,
+        "endLine": 19,
+        "docstring": "",
+        "code": "public User dtoToEntity(UserSignUpDTO dto) {\r\n        User user = new User();\r\n        Role role = new Role();\r\n        role.setRoleId(5);\r\n        user.setFullName(dto.getFullName());\r\n        user.setEmail(dto.getEmail());\r\n        user.setPasswordHash(dto.getPassword());\r\n        user.setRole(role);\r\n        return user;\r\n    }",
+        "imports": [
+          "com.flowerShop.dto.user.UserSignUpDTO",
+          "com.flowerShop.entity.Role",
+          "com.flowerShop.entity.User",
+          "org.springframework.stereotype.Component"
+        ],
+        "language": "java"
+      }
+    ]
+  },
+  {
+    "file": "C:\\Users\\ADMIN\\Documents\\FlowerShop\\FlowerShop\\src\\main\\java\\com\\flowerShop\\service\\cart\\CartService.java",
+    "language": "java",
+    "data": [
+      {
+        "type": "method",
+        "name": "addToCart",
+        "startLine": 23,
+        "endLine": 39,
+        "docstring": "",
+        "code": "public List<CartItemDTO> addToCart(CartItemDTO cartItemDTO, HttpServletRequest request, HttpServletResponse response) {\r\n        List<CartItemDTO> lsCart = getlsCart(request);\r\n        System.out.println(\"lsCart in addToCart: \" + lsCart);\r\n        System.out.println(\"cartItemDTO in addToCart: \" + cartItemDTO);\r\n        Optional<CartItemDTO> existingItem = lsCart.stream()\r\n                .filter(item -> item.getProductId() == cartItemDTO.getProductId())\r\n                .findFirst();\r\n            if (existingItem.isPresent()) {\r\n                CartItemDTO existingCartItem = existingItem.get();\r\n                existingCartItem.setQuantityCart(cartItemDTO.getQuantityCart());\r\n            } else {\r\n                System.out.println(\"Add new item to cart\");\r\n                lsCart.add(cartItemDTO);\r\n            }\r\n            saveLsCart(lsCart, response);\r\n            return lsCart;\r\n    }",
+        "imports": [
+          "com.fasterxml.jackson.databind.ObjectMapper",
+          "com.flowerShop.dto.product.CartItemDTO",
+          "com.flowerShop.service.cookie.CookieService",
+          "jakarta.servlet.http.HttpServletRequest",
+          "jakarta.servlet.http.HttpServletResponse",
+          "org.springframework.stereotype.Service",
+          "java.util.List",
+          "java.util.Optional"
+        ],
+        "language": "java"
+      },
+      {
+        "type": "method",
+        "name": "getlsCart",
+        "startLine": 41,
+        "endLine": 61,
+        "docstring": "",
+        "code": "public List<CartItemDTO> getlsCart(HttpServletRequest request) {\r\n        try {\r\n            String lsCartJson = CookieService.getCookieValueByName(request, \"lsCart\");\r\n            System.out.println(\"lsCartJson in getlsCart: \" + lsCartJson);\r\n            if (lsCartJson == null || lsCartJson.isEmpty()) {\r\n                System.out.println(\"33\");\r\n                return new java.util.ArrayList<>();\r\n            }\r\n            if (lsCartJson != null) {\r\n                System.out.println(\"36\");\r\n                String decodedJson = java.net.URLDecoder.decode(lsCartJson, \"UTF-8\");\r\n                System.out.println(\"decodedJson in getlsCart: \" + decodedJson);\r\n                System.out.println(\"DeBug map to object:\" + objectMapper.readValue(decodedJson, objectMapper.getTypeFactory().constructCollectionType(List.class, CartItemDTO.class)));\r\n                return objectMapper.readValue(decodedJson, objectMapper.getTypeFactory().constructCollectionType(List.class, CartItemDTO.class));\r\n            }\r\n        } catch (Exception e) {\r\n            e.printStackTrace();\r\n        }\r\n        System.out.println(\"45\");\r\n        return new java.util.ArrayList<>();\r\n    }",
+        "imports": [
+          "com.fasterxml.jackson.databind.ObjectMapper",
+          "com.flowerShop.dto.product.CartItemDTO",
+          "com.flowerShop.service.cookie.CookieService",
+          "jakarta.servlet.http.HttpServletRequest",
+          "jakarta.servlet.http.HttpServletResponse",
+          "org.springframework.stereotype.Service",
+          "java.util.List",
+          "java.util.Optional"
+        ],
+        "language": "java"
+      },
+      {
+        "type": "method",
+        "name": "saveLsCart",
+        "startLine": 63,
+        "endLine": 76,
+        "docstring": "",
+        "code": "public void saveLsCart(List<CartItemDTO> lsCart, HttpServletResponse response) {\r\n        try {\r\n            System.out.println(\"lsCart in saveLsCart: \" + lsCart);\r\n            String json = objectMapper.writeValueAsString(lsCart);\r\n            System.out.println(\"json in saveLsCart: \" + json);\r\n            String encodedJson = java.net.URLEncoder.encode(json, \"UTF-8\");\r\n            System.out.println(\"encodedJson in saveLsCart: \" + encodedJson);\r\n            CookieService.setCookie(response, \"lsCart\", encodedJson, 7 * 24 * 60 * 60);\r\n\r\n        }catch (Exception e){\r\n            e.printStackTrace();\r\n        }\r\n\r\n    }",
+        "imports": [
+          "com.fasterxml.jackson.databind.ObjectMapper",
+          "com.flowerShop.dto.product.CartItemDTO",
+          "com.flowerShop.service.cookie.CookieService",
+          "jakarta.servlet.http.HttpServletRequest",
+          "jakarta.servlet.http.HttpServletResponse",
+          "org.springframework.stereotype.Service",
+          "java.util.List",
+          "java.util.Optional"
+        ],
+        "language": "java"
+      },
+      {
+        "type": "method",
+        "name": "updateQuantity",
+        "startLine": 78,
+        "endLine": 88,
+        "docstring": "",
+        "code": "public void updateQuantity(int productId, int quantity, HttpServletRequest request, HttpServletResponse response) {\r\n        List<CartItemDTO> lsCart = getlsCart(request);\r\n        Optional<CartItemDTO> existingItem = lsCart.stream()\r\n                .filter(item -> item.getProductId() == productId)\r\n                .findFirst();\r\n        if (existingItem.isPresent()) {\r\n            CartItemDTO existingCartItem = existingItem.get();\r\n            existingCartItem.setQuantityCart(quantity);\r\n        }\r\n        saveLsCart(lsCart, response);\r\n    }",
+        "imports": [
+          "com.fasterxml.jackson.databind.ObjectMapper",
+          "com.flowerShop.dto.product.CartItemDTO",
+          "com.flowerShop.service.cookie.CookieService",
+          "jakarta.servlet.http.HttpServletRequest",
+          "jakarta.servlet.http.HttpServletResponse",
+          "org.springframework.stereotype.Service",
+          "java.util.List",
+          "java.util.Optional"
+        ],
+        "language": "java"
+      }
+    ]
+  },
+  {
+    "file": "C:\\Users\\ADMIN\\Documents\\FlowerShop\\FlowerShop\\src\\main\\java\\com\\flowerShop\\service\\category\\impl\\CategoryServiceImpl.java",
+    "language": "java",
+    "data": [
+      {
+        "type": "method",
+        "name": "getAllCategories",
+        "startLine": 14,
+        "endLine": 17,
+        "docstring": "",
+        "code": "@Override\r\n    public List<Category> getAllCategories() {\r\n        return categoryRepository.findAll();\r\n    }",
+        "imports": [
+          "com.flowerShop.entity.Category",
+          "com.flowerShop.repository.CategoryRepository",
+          "com.flowerShop.service.category.CategoryService",
+          "org.springframework.beans.factory.annotation.Autowired",
+          "org.springframework.stereotype.Service",
+          "java.util.List"
+        ],
+        "language": "java"
+      }
+    ]
+  },
+  {
+    "file": "C:\\Users\\ADMIN\\Documents\\FlowerShop\\FlowerShop\\src\\main\\java\\com\\flowerShop\\service\\cookie\\CookieService.java",
+    "language": "java",
+    "data": [
+      {
+        "type": "method",
+        "name": "setCookie",
+        "startLine": 8,
+        "endLine": 13,
+        "docstring": "",
+        "code": "public static void setCookie(HttpServletResponse response, String name, String value, int maxAge){\r\n        Cookie cookie = new Cookie(name, value);\r\n        cookie.setMaxAge(maxAge);\r\n        cookie.setPath(\"/\");\r\n        response.addCookie(cookie);\r\n    }",
+        "imports": [
+          "jakarta.servlet.http.Cookie",
+          "jakarta.servlet.http.HttpServletRequest",
+          "jakarta.servlet.http.HttpServletResponse"
+        ],
+        "language": "java"
+      },
+      {
+        "type": "method",
+        "name": "getCookieValueByName",
+        "startLine": 16,
+        "endLine": 26,
+        "docstring": "",
+        "code": "public static String getCookieValueByName(HttpServletRequest request, String name) {\r\n        Cookie[] cookies = request.getCookies();\r\n        if (cookies != null) {\r\n            for (Cookie cookie : cookies) {\r\n                if (cookie.getName().equals(name)) {\r\n                    return cookie.getValue();\r\n                }\r\n            }\r\n        }\r\n        return null;\r\n    }",
+        "imports": [
+          "jakarta.servlet.http.Cookie",
+          "jakarta.servlet.http.HttpServletRequest",
+          "jakarta.servlet.http.HttpServletResponse"
+        ],
+        "language": "java"
+      }
+    ]
+  },
+  {
+    "file": "C:\\Users\\ADMIN\\Documents\\FlowerShop\\FlowerShop\\src\\main\\java\\com\\flowerShop\\service\\mail\\MailService.java",
+    "language": "java",
+    "data": [
+      {
+        "type": "method",
+        "name": "sendOTP",
+        "startLine": 13,
+        "endLine": 19,
+        "docstring": "",
+        "code": "public void sendOTP(String toEmail, String otp) {\r\n        SimpleMailMessage message = new SimpleMailMessage();\r\n        message.setTo(toEmail);\r\n        message.setSubject(\"OTP Verification\");\r\n        message.setText(\"Your OTP is: \" + otp);\r\n        javaMailSender.send(message);\r\n    }",
+        "imports": [
+          "org.springframework.beans.factory.annotation.Autowired",
+          "org.springframework.mail.SimpleMailMessage",
+          "org.springframework.mail.javamail.JavaMailSender",
+          "org.springframework.stereotype.Service"
+        ],
+        "language": "java"
+      }
+    ]
+  },
+  {
+    "file": "C:\\Users\\ADMIN\\Documents\\FlowerShop\\FlowerShop\\src\\main\\java\\com\\flowerShop\\service\\orderDetail\\impl\\OrderDetailServiceImpl.java",
+    "language": "java",
+    "data": [
+      {
+        "type": "method",
+        "name": "getTopSellingProducts",
+        "startLine": 15,
+        "endLine": 19,
+        "docstring": "",
+        "code": "@Override\r\n    public List<ProductTopSellingDTO> getTopSellingProducts() {\r\n        List<Object[]> results = orderDetailRepository.findBestSellingProductsNative();\r\n      return  results.stream().map(objects -> new ProductTopSellingDTO((int) objects[0], (String) objects[1], (String) objects[2], (BigDecimal) objects[3])).toList();\r\n    }",
+        "imports": [
+          "com.flowerShop.dto.product.ProductTopSellingDTO",
+          "com.flowerShop.repository.OrderDetailRepository",
+          "com.flowerShop.service.orderDetail.OrderDetailService",
+          "org.springframework.beans.factory.annotation.Autowired",
+          "org.springframework.stereotype.Service",
+          "java.math.BigDecimal",
+          "java.util.List"
+        ],
+        "language": "java"
+      },
+      {
+        "type": "method",
+        "name": "getTrendingProducts",
+        "startLine": 21,
+        "endLine": 25,
+        "docstring": "",
+        "code": "@Override\r\n    public List<ProductTopSellingDTO> getTrendingProducts() {\r\n        List<Object[]> results = orderDetailRepository.findTrendingProductsNative();\r\n        return  results.stream().map(objects -> new ProductTopSellingDTO((int) objects[0], (String) objects[1], (String) objects[2], (BigDecimal) objects[3])).toList();\r\n    }",
+        "imports": [
+          "com.flowerShop.dto.product.ProductTopSellingDTO",
+          "com.flowerShop.repository.OrderDetailRepository",
+          "com.flowerShop.service.orderDetail.OrderDetailService",
+          "org.springframework.beans.factory.annotation.Autowired",
+          "org.springframework.stereotype.Service",
+          "java.math.BigDecimal",
+          "java.util.List"
+        ],
+        "language": "java"
+      }
+    ]
+  },
+  {
+    "file": "C:\\Users\\ADMIN\\Documents\\FlowerShop\\FlowerShop\\src\\main\\java\\com\\flowerShop\\service\\product\\impl\\ProductServiceImpl.java",
+    "language": "java",
+    "data": [
+      {
+        "type": "method",
+        "name": "getAllProducts",
+        "startLine": 14,
+        "endLine": 17,
+        "docstring": "",
+        "code": "@Override\r\n    public List<Product> getAllProducts() {\r\n        return productRepository.findAll();\r\n    }",
+        "imports": [
+          "com.flowerShop.entity.Product",
+          "com.flowerShop.repository.ProductRepository",
+          "com.flowerShop.service.product.ProductService",
+          "org.springframework.beans.factory.annotation.Autowired",
+          "org.springframework.stereotype.Service",
+          "java.util.List"
+        ],
+        "language": "java"
+      },
+      {
+        "type": "method",
+        "name": "getProductById",
+        "startLine": 19,
+        "endLine": 26,
+        "docstring": "",
+        "code": "@Override\r\n    public Product getProductById(int productId) {\r\n        Product product = productRepository.findByProductId(productId);\r\n        if (product == null) {\r\n            throw new RuntimeException(\"Product not found\");\r\n        }\r\n        return product;\r\n    }",
+        "imports": [
+          "com.flowerShop.entity.Product",
+          "com.flowerShop.repository.ProductRepository",
+          "com.flowerShop.service.product.ProductService",
+          "org.springframework.beans.factory.annotation.Autowired",
+          "org.springframework.stereotype.Service",
+          "java.util.List"
+        ],
+        "language": "java"
+      }
+    ]
+  },
+  {
+    "file": "C:\\Users\\ADMIN\\Documents\\FlowerShop\\FlowerShop\\src\\main\\java\\com\\flowerShop\\service\\security\\CustomUserDetails.java",
+    "language": "java",
+    "data": [
+      {
+        "type": "method",
+        "name": "getAuthorities",
+        "startLine": 20,
+        "endLine": 23,
+        "docstring": "",
+        "code": "@Override\r\n    public Collection<? extends GrantedAuthority> getAuthorities() {\r\n        return List.of(new SimpleGrantedAuthority(user.getRole().getRoleName()));\r\n    }",
+        "imports": [
+          "com.flowerShop.entity.User",
+          "org.springframework.security.core.GrantedAuthority",
+          "org.springframework.security.core.authority.SimpleGrantedAuthority",
+          "org.springframework.security.core.userdetails.UserDetails",
+          "java.util.Collection",
+          "java.util.List"
+        ],
+        "language": "java"
+      },
+      {
+        "type": "method",
+        "name": "getFullName",
+        "startLine": 24,
+        "endLine": 24,
+        "docstring": "",
+        "code": "public String getFullName() { return user.getFullName(); }",
+        "imports": [
+          "com.flowerShop.entity.User",
+          "org.springframework.security.core.GrantedAuthority",
+          "org.springframework.security.core.authority.SimpleGrantedAuthority",
+          "org.springframework.security.core.userdetails.UserDetails",
+          "java.util.Collection",
+          "java.util.List"
+        ],
+        "language": "java"
+      },
+      {
+        "type": "method",
+        "name": "getPassword",
+        "startLine": 26,
+        "endLine": 27,
+        "docstring": "",
+        "code": "@Override\r\n    public String getPassword() { return user.getPasswordHash(); }",
+        "imports": [
+          "com.flowerShop.entity.User",
+          "org.springframework.security.core.GrantedAuthority",
+          "org.springframework.security.core.authority.SimpleGrantedAuthority",
+          "org.springframework.security.core.userdetails.UserDetails",
+          "java.util.Collection",
+          "java.util.List"
+        ],
+        "language": "java"
+      },
+      {
+        "type": "method",
+        "name": "getUsername",
+        "startLine": 29,
+        "endLine": 30,
+        "docstring": "",
+        "code": "@Override\r\n    public String getUsername() { return user.getEmail(); }",
+        "imports": [
+          "com.flowerShop.entity.User",
+          "org.springframework.security.core.GrantedAuthority",
+          "org.springframework.security.core.authority.SimpleGrantedAuthority",
+          "org.springframework.security.core.userdetails.UserDetails",
+          "java.util.Collection",
+          "java.util.List"
+        ],
+        "language": "java"
+      },
+      {
+        "type": "method",
+        "name": "isAccountNonExpired",
+        "startLine": 32,
+        "endLine": 33,
+        "docstring": "",
+        "code": "@Override\r\n    public boolean isAccountNonExpired() { return true; }",
+        "imports": [
+          "com.flowerShop.entity.User",
+          "org.springframework.security.core.GrantedAuthority",
+          "org.springframework.security.core.authority.SimpleGrantedAuthority",
+          "org.springframework.security.core.userdetails.UserDetails",
+          "java.util.Collection",
+          "java.util.List"
+        ],
+        "language": "java"
+      },
+      {
+        "type": "method",
+        "name": "isAccountNonLocked",
+        "startLine": 35,
+        "endLine": 36,
+        "docstring": "",
+        "code": "@Override\r\n    public boolean isAccountNonLocked() { return true; }",
+        "imports": [
+          "com.flowerShop.entity.User",
+          "org.springframework.security.core.GrantedAuthority",
+          "org.springframework.security.core.authority.SimpleGrantedAuthority",
+          "org.springframework.security.core.userdetails.UserDetails",
+          "java.util.Collection",
+          "java.util.List"
+        ],
+        "language": "java"
+      },
+      {
+        "type": "method",
+        "name": "isCredentialsNonExpired",
+        "startLine": 38,
+        "endLine": 39,
+        "docstring": "",
+        "code": "@Override\r\n    public boolean isCredentialsNonExpired() { return true; }",
+        "imports": [
+          "com.flowerShop.entity.User",
+          "org.springframework.security.core.GrantedAuthority",
+          "org.springframework.security.core.authority.SimpleGrantedAuthority",
+          "org.springframework.security.core.userdetails.UserDetails",
+          "java.util.Collection",
+          "java.util.List"
+        ],
+        "language": "java"
+      },
+      {
+        "type": "method",
+        "name": "isEnabled",
+        "startLine": 41,
+        "endLine": 42,
+        "docstring": "",
+        "code": "@Override\r\n    public boolean isEnabled() { return true; }",
+        "imports": [
+          "com.flowerShop.entity.User",
+          "org.springframework.security.core.GrantedAuthority",
+          "org.springframework.security.core.authority.SimpleGrantedAuthority",
+          "org.springframework.security.core.userdetails.UserDetails",
+          "java.util.Collection",
+          "java.util.List"
+        ],
+        "language": "java"
+      }
+    ]
+  },
+  {
+    "file": "C:\\Users\\ADMIN\\Documents\\FlowerShop\\FlowerShop\\src\\main\\java\\com\\flowerShop\\service\\security\\CustomUserDetailsService.java",
+    "language": "java",
+    "data": [
+      {
+        "type": "method",
+        "name": "loadUserByUsername",
+        "startLine": 16,
+        "endLine": 21,
+        "docstring": "",
+        "code": "@Override\r\n    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {\r\n        User user = userRepository.findByEmail(username);\r\n        if (user == null) throw  new UsernameNotFoundException(username);\r\n        return new CustomUserDetails(user);\r\n    }",
+        "imports": [
+          "com.flowerShop.entity.User",
+          "com.flowerShop.repository.UserRepository",
+          "org.springframework.beans.factory.annotation.Autowired",
+          "org.springframework.security.core.userdetails.UserDetails",
+          "org.springframework.security.core.userdetails.UserDetailsService",
+          "org.springframework.security.core.userdetails.UsernameNotFoundException",
+          "org.springframework.stereotype.Service"
+        ],
+        "language": "java"
+      }
+    ]
+  },
+  {
+    "file": "C:\\Users\\ADMIN\\Documents\\FlowerShop\\FlowerShop\\src\\main\\java\\com\\flowerShop\\service\\user\\impl\\UserServiceImpl.java",
+    "language": "java",
+    "data": [
+      {
+        "type": "method",
+        "name": "getAllUsers",
+        "startLine": 25,
+        "endLine": 28,
+        "docstring": "",
+        "code": "@Override\r\n    public List<User> getAllUsers() {\r\n        return  userRepository.findAll();\r\n    }",
+        "imports": [
+          "com.flowerShop.dto.user.UserSignUpDTO",
+          "com.flowerShop.entity.User",
+          "com.flowerShop.mapper.user.UserSignUpMapper",
+          "com.flowerShop.repository.UserRepository",
+          "com.flowerShop.service.mail.MailService",
+          "com.flowerShop.service.user.UserService",
+          "org.springframework.beans.factory.annotation.Autowired",
+          "org.springframework.stereotype.Service",
+          "java.util.List"
+        ],
+        "language": "java"
+      },
+      {
+        "type": "method",
+        "name": "register",
+        "startLine": 30,
+        "endLine": 41,
+        "docstring": "",
+        "code": "@Override\r\n    public void register(UserSignUpDTO user) {\r\n        if (userRepository.existsByEmail(user.getEmail())) {\r\n            throw new RuntimeException(\"Email already exists\");\r\n        }\r\n\r\n        String otp = generateOTP();\r\n        user.setOtp(otp);\r\n        user.setOtpExpirationTime(java.time.LocalDateTime.now().plusMinutes(3));\r\n        mailService.sendOTP(user.getEmail(), otp);\r\n\r\n    }",
+        "imports": [
+          "com.flowerShop.dto.user.UserSignUpDTO",
+          "com.flowerShop.entity.User",
+          "com.flowerShop.mapper.user.UserSignUpMapper",
+          "com.flowerShop.repository.UserRepository",
+          "com.flowerShop.service.mail.MailService",
+          "com.flowerShop.service.user.UserService",
+          "org.springframework.beans.factory.annotation.Autowired",
+          "org.springframework.stereotype.Service",
+          "java.util.List"
+        ],
+        "language": "java"
+      },
+      {
+        "type": "method",
+        "name": "verifyOTP",
+        "startLine": 42,
+        "endLine": 49,
+        "docstring": "",
+        "code": "@Override\r\n    public boolean verifyOTP(UserSignUpDTO userSignUpDTO, String otp) {\r\n        if (userSignUpDTO.getOtp().equals(otp) && userSignUpDTO.getOtpExpirationTime().isAfter(java.time.LocalDateTime.now())) {\r\n            userRepository.save(userSignUpMapper.dtoToEntity(userSignUpDTO));\r\n            return true;\r\n        }\r\n        return false;\r\n    }",
+        "imports": [
+          "com.flowerShop.dto.user.UserSignUpDTO",
+          "com.flowerShop.entity.User",
+          "com.flowerShop.mapper.user.UserSignUpMapper",
+          "com.flowerShop.repository.UserRepository",
+          "com.flowerShop.service.mail.MailService",
+          "com.flowerShop.service.user.UserService",
+          "org.springframework.beans.factory.annotation.Autowired",
+          "org.springframework.stereotype.Service",
+          "java.util.List"
+        ],
+        "language": "java"
+      },
+      {
+        "type": "method",
+        "name": "generateOTP",
+        "startLine": 52,
+        "endLine": 54,
+        "docstring": "",
+        "code": "public String generateOTP() {\r\n        return String.valueOf((int) (Math.random() * 900000) + 100000);\r\n    }",
+        "imports": [
+          "com.flowerShop.dto.user.UserSignUpDTO",
+          "com.flowerShop.entity.User",
+          "com.flowerShop.mapper.user.UserSignUpMapper",
+          "com.flowerShop.repository.UserRepository",
+          "com.flowerShop.service.mail.MailService",
+          "com.flowerShop.service.user.UserService",
+          "org.springframework.beans.factory.annotation.Autowired",
+          "org.springframework.stereotype.Service",
+          "java.util.List"
+        ],
+        "language": "java"
+      }
+    ]
+  },
+  {
+    "file": "C:\\Users\\ADMIN\\Documents\\FlowerShop\\FlowerShop\\src\\main\\java\\com\\flowerShop\\ServletInitializer.java",
+    "language": "java",
+    "data": [
+      {
+        "type": "method",
+        "name": "configure",
+        "startLine": 8,
+        "endLine": 11,
+        "docstring": "",
+        "code": "@Override\n    protected SpringApplicationBuilder configure(SpringApplicationBuilder application) {\n        return application.sources(FlowerShopApplication.class);\n    }",
+        "imports": [
+          "org.springframework.boot.builder.SpringApplicationBuilder",
+          "org.springframework.boot.web.servlet.support.SpringBootServletInitializer"
+        ],
+        "language": "java"
+      }
+    ]
+  },
+  {
+    "file": "C:\\Users\\ADMIN\\Documents\\FlowerShop\\FlowerShop\\src\\main\\resources\\static\\assets\\js\\script.js",
+    "language": "javascript",
+    "data": [
+      {
+        "type": "function",
+        "name": "readURL",
+        "startLine": 382,
+        "endLine": 385,
+        "docstring": "=====================\n   20. user-dashboard profile change js\n   ==========================",
+        "code": "function readURL(uploader) {\n    $('.update_img').attr('src',\n        window.URL.createObjectURL(uploader.files[0]));\n}",
+        "imports": [],
+        "language": "javascript"
+      }
+    ]
+  },
+  {
+    "file": "C:\\Users\\ADMIN\\Documents\\FlowerShop\\FlowerShop\\src\\main\\resources\\static\\assets\\js\\timer1.js",
+    "language": "javascript",
+    "data": [
+      {
+        "type": "function",
+        "name": "getTimeRemaining",
+        "startLine": 5,
+        "endLine": 22,
+        "docstring": "**** CALCULATE THE TIME REMAINING ****",
+        "code": "function getTimeRemaining(endtime) {\n    var t = Date.parse(endtime) - Date.parse(new Date());\n\n    /***** CONVERT THE TIME TO A USEABLE FORMAT *****/\n    var seconds = Math.floor((t / 1000) % 60);\n    var minutes = Math.floor((t / 1000 / 60) % 60);\n    var hours = Math.floor((t / (1000 * 60 * 60)) % 24);\n    var days = Math.floor(t / (1000 * 60 * 60 * 24));\n\n    /***** OUTPUT THE CLOCK DATA AS A REUSABLE OBJECT *****/\n    return {\n        'total': t,\n        'days': days,\n        'hours': hours,\n        'minutes': minutes,\n        'seconds': seconds\n    };\n}",
+        "imports": [],
+        "language": "javascript"
+      },
+      {
+        "type": "function",
+        "name": "initializeClock",
+        "startLine": 25,
+        "endLine": 47,
+        "docstring": "**** DISPLAY THE CLOCK AND STOP IT WHEN IT REACHES ZERO ****",
+        "code": "function initializeClock(id, endtime) {\n    var clock = document.getElementById(id);\n    var daysSpan = clock.querySelector('.days');\n    var hoursSpan = clock.querySelector('.hours');\n    var minutesSpan = clock.querySelector('.minutes');\n    var secondsSpan = clock.querySelector('.seconds');\n\n    function updateClock() {\n        var t = getTimeRemaining(endtime);\n\n        daysSpan.innerHTML = t.days;\n        hoursSpan.innerHTML = ('0' + t.hours).slice(-2);\n        minutesSpan.innerHTML = ('0' + t.minutes).slice(-2);\n        secondsSpan.innerHTML = ('0' + t.seconds).slice(-2);\n\n        if (t.total <= 0) {\n            clearInterval(timeinterval);\n        }\n    }\n\n    updateClock(); // run function once at first to avoid delay\n    var timeinterval = setInterval(updateClock, 1000);\n}",
+        "imports": [],
+        "language": "javascript"
+      }
+    ]
+  },
+  {
+    "file": "C:\\Users\\ADMIN\\Documents\\FlowerShop\\FlowerShop\\src\\main\\resources\\static\\assets\\js\\timer2.js",
+    "language": "javascript",
+    "data": [
+      {
+        "type": "function",
+        "name": "getTimeRemaining",
+        "startLine": 5,
+        "endLine": 22,
+        "docstring": "**** CALCULATE THE TIME REMAINING ****",
+        "code": "function getTimeRemaining(endtime) {\n    var t = Date.parse(endtime) - Date.parse(new Date());\n\n    /***** CONVERT THE TIME TO A USEABLE FORMAT *****/\n    var seconds = Math.floor((t / 1000) % 60);\n    var minutes = Math.floor((t / 1000 / 60) % 60);\n    var hours = Math.floor((t / (1000 * 60 * 60)) % 24);\n    var days = Math.floor(t / (1000 * 60 * 60 * 24));\n\n    /***** OUTPUT THE CLOCK DATA AS A REUSABLE OBJECT *****/\n    return {\n        'total': t,\n        'days': days,\n        'hours': hours,\n        'minutes': minutes,\n        'seconds': seconds\n    };\n}",
+        "imports": [],
+        "language": "javascript"
+      },
+      {
+        "type": "function",
+        "name": "initializeClock",
+        "startLine": 25,
+        "endLine": 47,
+        "docstring": "**** DISPLAY THE CLOCK AND STOP IT WHEN IT REACHES ZERO ****",
+        "code": "function initializeClock(id, endtime) {\n    var clock = document.getElementById(id);\n    var daysSpan = clock.querySelector('.days');\n    var hoursSpan = clock.querySelector('.hours');\n    var minutesSpan = clock.querySelector('.minutes');\n    var secondsSpan = clock.querySelector('.seconds');\n\n    function updateClock() {\n        var t = getTimeRemaining(endtime);\n\n        daysSpan.innerHTML = t.days;\n        hoursSpan.innerHTML = ('0' + t.hours).slice(-2);\n        minutesSpan.innerHTML = ('0' + t.minutes).slice(-2);\n        secondsSpan.innerHTML = ('0' + t.seconds).slice(-2);\n\n        if (t.total <= 0) {\n            clearInterval(timeinterval);\n        }\n    }\n\n    updateClock(); // run function once at first to avoid delay\n    var timeinterval = setInterval(updateClock, 1000);\n}",
+        "imports": [],
+        "language": "javascript"
+      }
+    ]
+  },
+  {
+    "file": "C:\\Users\\ADMIN\\Documents\\FlowerShop\\FlowerShop\\src\\main\\resources\\static\\assets\\js\\timer3.js",
+    "language": "javascript",
+    "data": [
+      {
+        "type": "function",
+        "name": "getTimeRemaining",
+        "startLine": 5,
+        "endLine": 22,
+        "docstring": "**** CALCULATE THE TIME REMAINING ****",
+        "code": "function getTimeRemaining(endtime) {\n    var t = Date.parse(endtime) - Date.parse(new Date());\n\n    /***** CONVERT THE TIME TO A USEABLE FORMAT *****/\n    var seconds = Math.floor((t / 1000) % 60);\n    var minutes = Math.floor((t / 1000 / 60) % 60);\n    var hours = Math.floor((t / (1000 * 60 * 60)) % 24);\n    var days = Math.floor(t / (1000 * 60 * 60 * 24));\n\n    /***** OUTPUT THE CLOCK DATA AS A REUSABLE OBJECT *****/\n    return {\n        'total': t,\n        'days': days,\n        'hours': hours,\n        'minutes': minutes,\n        'seconds': seconds\n    };\n}",
+        "imports": [],
+        "language": "javascript"
+      },
+      {
+        "type": "function",
+        "name": "initializeClock",
+        "startLine": 25,
+        "endLine": 47,
+        "docstring": "**** DISPLAY THE CLOCK AND STOP IT WHEN IT REACHES ZERO ****",
+        "code": "function initializeClock(id, endtime) {\n    var clock = document.getElementById(id);\n    var daysSpan = clock.querySelector('.days');\n    var hoursSpan = clock.querySelector('.hours');\n    var minutesSpan = clock.querySelector('.minutes');\n    var secondsSpan = clock.querySelector('.seconds');\n\n    function updateClock() {\n        var t = getTimeRemaining(endtime);\n\n        daysSpan.innerHTML = t.days;\n        hoursSpan.innerHTML = ('0' + t.hours).slice(-2);\n        minutesSpan.innerHTML = ('0' + t.minutes).slice(-2);\n        secondsSpan.innerHTML = ('0' + t.seconds).slice(-2);\n\n        if (t.total <= 0) {\n            clearInterval(timeinterval);\n        }\n    }\n\n    updateClock(); // run function once at first to avoid delay\n    var timeinterval = setInterval(updateClock, 1000);\n}",
+        "imports": [],
+        "language": "javascript"
+      }
+    ]
+  },
+  {
+    "file": "C:\\Users\\ADMIN\\Documents\\FlowerShop\\FlowerShop\\src\\main\\resources\\static\\assets\\js\\timer4.js",
+    "language": "javascript",
+    "data": [
+      {
+        "type": "function",
+        "name": "getTimeRemaining",
+        "startLine": 5,
+        "endLine": 22,
+        "docstring": "**** CALCULATE THE TIME REMAINING ****",
+        "code": "function getTimeRemaining(endtime) {\n    var t = Date.parse(endtime) - Date.parse(new Date());\n\n    /***** CONVERT THE TIME TO A USEABLE FORMAT *****/\n    var seconds = Math.floor((t / 1000) % 60);\n    var minutes = Math.floor((t / 1000 / 60) % 60);\n    var hours = Math.floor((t / (1000 * 60 * 60)) % 24);\n    var days = Math.floor(t / (1000 * 60 * 60 * 24));\n\n    /***** OUTPUT THE CLOCK DATA AS A REUSABLE OBJECT *****/\n    return {\n        'total': t,\n        'days': days,\n        'hours': hours,\n        'minutes': minutes,\n        'seconds': seconds\n    };\n}",
+        "imports": [],
+        "language": "javascript"
+      },
+      {
+        "type": "function",
+        "name": "initializeClock",
+        "startLine": 25,
+        "endLine": 47,
+        "docstring": "**** DISPLAY THE CLOCK AND STOP IT WHEN IT REACHES ZERO ****",
+        "code": "function initializeClock(id, endtime) {\n    var clock = document.getElementById(id);\n    var daysSpan = clock.querySelector('.days');\n    var hoursSpan = clock.querySelector('.hours');\n    var minutesSpan = clock.querySelector('.minutes');\n    var secondsSpan = clock.querySelector('.seconds');\n\n    function updateClock() {\n        var t = getTimeRemaining(endtime);\n\n        daysSpan.innerHTML = t.days;\n        hoursSpan.innerHTML = ('0' + t.hours).slice(-2);\n        minutesSpan.innerHTML = ('0' + t.minutes).slice(-2);\n        secondsSpan.innerHTML = ('0' + t.seconds).slice(-2);\n\n        if (t.total <= 0) {\n            clearInterval(timeinterval);\n        }\n    }\n\n    updateClock(); // run function once at first to avoid delay\n    var timeinterval = setInterval(updateClock, 1000);\n}",
+        "imports": [],
+        "language": "javascript"
+      }
+    ]
+  },
+  {
+    "file": "C:\\Users\\ADMIN\\Documents\\FlowerShop\\FlowerShop\\src\\main\\resources\\templates\\client\\cart.html",
+    "language": "html",
+    "data": [
+      {
+        "type": "dependency",
+        "tag": "link",
+        "path": "../assets/images/favicon/1.png",
+        "language": "html"
+      },
+      {
+        "type": "dependency",
+        "tag": "link",
+        "path": "https://fonts.gstatic.com/",
+        "language": "html"
+      },
+      {
+        "type": "dependency",
+        "tag": "link",
+        "path": "https://fonts.googleapis.com/css2?family=Russo+One&amp;display=swap",
+        "language": "html"
+      },
+      {
+        "type": "dependency",
+        "tag": "link",
+        "path": "https://fonts.googleapis.com/css2?family=Exo+2:wght@400;500;600;700;800;900&amp;display=swap",
+        "language": "html"
+      },
+      {
+        "type": "dependency",
+        "tag": "link",
+        "path": "https://fonts.googleapis.com/css2?family=Public+Sans:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&amp;display=swap",
+        "language": "html"
+      },
+      {
+        "type": "dependency",
+        "tag": "link",
+        "path": "../assets/css/vendors/bootstrap.css",
+        "language": "html"
+      },
+      {
+        "type": "dependency",
+        "tag": "link",
+        "path": "../assets/css/bulk-style.css",
+        "language": "html"
+      },
+      {
+        "type": "dependency",
+        "tag": "link",
+        "path": "../assets/css/style.css",
+        "language": "html"
+      },
+      {
+        "type": "dependency",
+        "tag": "script",
+        "path": "../assets/js/jquery-3.6.0.min.js",
+        "language": "html"
+      },
+      {
+        "type": "dependency",
+        "tag": "script",
+        "path": "../assets/js/jquery-ui.min.js",
+        "language": "html"
+      },
+      {
+        "type": "dependency",
+        "tag": "script",
+        "path": "../assets/js/bootstrap/bootstrap.bundle.min.js",
+        "language": "html"
+      },
+      {
+        "type": "dependency",
+        "tag": "script",
+        "path": "../assets/js/bootstrap/popper.min.js",
+        "language": "html"
+      },
+      {
+        "type": "dependency",
+        "tag": "script",
+        "path": "../assets/js/bootstrap/bootstrap-notify.min.js",
+        "language": "html"
+      },
+      {
+        "type": "dependency",
+        "tag": "script",
+        "path": "../assets/js/feather/feather.min.js",
+        "language": "html"
+      },
+      {
+        "type": "dependency",
+        "tag": "script",
+        "path": "../assets/js/feather/feather-icon.js",
+        "language": "html"
+      },
+      {
+        "type": "dependency",
+        "tag": "script",
+        "path": "../assets/js/lazysizes.min.js",
+        "language": "html"
+      },
+      {
+        "type": "dependency",
+        "tag": "script",
+        "path": "../assets/js/slick/slick.js",
+        "language": "html"
+      },
+      {
+        "type": "dependency",
+        "tag": "script",
+        "path": "../assets/js/slick/custom_slick.js",
+        "language": "html"
+      },
+      {
+        "type": "dependency",
+        "tag": "script",
+        "path": "../assets/js/quantity.js",
+        "language": "html"
+      },
+      {
+        "type": "dependency",
+        "tag": "script",
+        "path": "../assets/js/script.js",
+        "language": "html"
+      },
+      {
+        "type": "dependency",
+        "tag": "script",
+        "path": "../assets/js/theme-setting.js",
+        "language": "html"
+      },
+      {
+        "type": "code_block",
+        "tag": "script",
+        "startLine": 644,
+        "endLine": 701,
+        "code": "document.addEventListener(\"DOMContentLoaded\", function () {\n                renderGetLsCart();\n        });\n\n        function renderGetLsCart() {\n            try {\n                fetch('/cart/showCart')\n                    .then(response => response.text())\n                    .then(data => {\n                        document.getElementById('cartTable').innerHTML = data;\n                    })\n            } catch (error) {\n                console.log(error);\n            }\n        }\n\n        function minusQuantity(productId) {\n            const input = document.querySelector(`input[data-product-id=\"${productId}\"]`);\n            if (input) {\n                let quantity = parseInt(input.value);\n                if (quantity > 1) {\n                    quantity--;\n                }\n                input.value = quantity;\n            }\n            updateQuantity(productId, input.value);\n\n        }\n\n        function updateQuantity(productId, quantity) {\n            console.log(\"updateQuantity called\")\n            try {\n                fetch('/cart/updateQuantity'\n                    + '?productId=' + productId\n                    + '&quantity=' + quantity\n                ).then(response => response.text())\n                    .then(data => {\n                       renderGetLsCart();\n                    })\n            } catch (error) {\n                console.log(error);\n            }\n        }\n\n\n\n        function plusQuantity(productId) {\n            const input = document.querySelector(`input[data-product-id=\"${productId}\"]`);\n            if (input) {\n                let quantity = parseInt(input.value);\n                quantity++;\n                input.value = quantity;\n            }\n            updateQuantity(productId, input.value);\n        }",
+        "language": "html"
+      }
+    ]
+  },
+  {
+    "file": "C:\\Users\\ADMIN\\Documents\\FlowerShop\\FlowerShop\\src\\main\\resources\\templates\\client\\index.html",
+    "language": "html",
+    "data": [
+      {
+        "type": "dependency",
+        "tag": "link",
+        "path": "../assets/images/favicon/3.png",
+        "language": "html"
+      },
+      {
+        "type": "dependency",
+        "tag": "link",
+        "path": "https://fonts.gstatic.com/",
+        "language": "html"
+      },
+      {
+        "type": "dependency",
+        "tag": "link",
+        "path": "https://fonts.googleapis.com/css2?family=Russo+One&amp;display=swap",
+        "language": "html"
+      },
+      {
+        "type": "dependency",
+        "tag": "link",
+        "path": "https://fonts.googleapis.com/css2?family=Exo+2:wght@400;500;600;700;800;900&amp;display=swap",
+        "language": "html"
+      },
+      {
+        "type": "dependency",
+        "tag": "link",
+        "path": "https://fonts.googleapis.com/css2?family=Public+Sans:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&amp;display=swap",
+        "language": "html"
+      },
+      {
+        "type": "dependency",
+        "tag": "link",
+        "path": "../assets/css/vendors/bootstrap.css",
+        "language": "html"
+      },
+      {
+        "type": "dependency",
+        "tag": "link",
+        "path": "../assets/css/animate.min.css",
+        "language": "html"
+      },
+      {
+        "type": "dependency",
+        "tag": "link",
+        "path": "../assets/css/bulk-style.css",
+        "language": "html"
+      },
+      {
+        "type": "dependency",
+        "tag": "link",
+        "path": "../assets/css/style.css",
+        "language": "html"
+      },
+      {
+        "type": "dependency",
+        "tag": "script",
+        "path": "../assets/js/jquery-3.6.0.min.js",
+        "language": "html"
+      },
+      {
+        "type": "dependency",
+        "tag": "script",
+        "path": "../assets/js/jquery-ui.min.js",
+        "language": "html"
+      },
+      {
+        "type": "dependency",
+        "tag": "script",
+        "path": "../assets/js/bootstrap/bootstrap.bundle.min.js",
+        "language": "html"
+      },
+      {
+        "type": "dependency",
+        "tag": "script",
+        "path": "../assets/js/bootstrap/bootstrap-notify.min.js",
+        "language": "html"
+      },
+      {
+        "type": "dependency",
+        "tag": "script",
+        "path": "../assets/js/bootstrap/popper.min.js",
+        "language": "html"
+      },
+      {
+        "type": "dependency",
+        "tag": "script",
+        "path": "../assets/js/feather/feather.min.js",
+        "language": "html"
+      },
+      {
+        "type": "dependency",
+        "tag": "script",
+        "path": "../assets/js/feather/feather-icon.js",
+        "language": "html"
+      },
+      {
+        "type": "dependency",
+        "tag": "script",
+        "path": "../assets/js/lazysizes.min.js",
+        "language": "html"
+      },
+      {
+        "type": "dependency",
+        "tag": "script",
+        "path": "../assets/js/slick/slick.js",
+        "language": "html"
+      },
+      {
+        "type": "dependency",
+        "tag": "script",
+        "path": "../assets/js/slick/custom_slick.js",
+        "language": "html"
+      },
+      {
+        "type": "dependency",
+        "tag": "script",
+        "path": "../assets/js/auto-height.js",
+        "language": "html"
+      },
+      {
+        "type": "dependency",
+        "tag": "script",
+        "path": "../assets/js/timer1.js",
+        "language": "html"
+      },
+      {
+        "type": "dependency",
+        "tag": "script",
+        "path": "../assets/js/fly-cart.js",
+        "language": "html"
+      },
+      {
+        "type": "dependency",
+        "tag": "script",
+        "path": "../assets/js/quantity-2.js",
+        "language": "html"
+      },
+      {
+        "type": "dependency",
+        "tag": "script",
+        "path": "../assets/js/wow.min.js",
+        "language": "html"
+      },
+      {
+        "type": "dependency",
+        "tag": "script",
+        "path": "../assets/js/custom-wow.js",
+        "language": "html"
+      },
+      {
+        "type": "dependency",
+        "tag": "script",
+        "path": "../assets/js/script.js",
+        "language": "html"
+      },
+      {
+        "type": "dependency",
+        "tag": "script",
+        "path": "../assets/js/theme-setting.js",
+        "language": "html"
+      }
+    ]
+  },
+  {
+    "file": "C:\\Users\\ADMIN\\Documents\\FlowerShop\\FlowerShop\\src\\main\\resources\\templates\\client\\login.html",
+    "language": "html",
+    "data": [
+      {
+        "type": "dependency",
+        "tag": "link",
+        "path": "../assets/images/favicon/1.png",
+        "language": "html"
+      },
+      {
+        "type": "dependency",
+        "tag": "link",
+        "path": "https://fonts.gstatic.com/",
+        "language": "html"
+      },
+      {
+        "type": "dependency",
+        "tag": "link",
+        "path": "https://fonts.googleapis.com/css2?family=Public+Sans:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&amp;display=swap",
+        "language": "html"
+      },
+      {
+        "type": "dependency",
+        "tag": "link",
+        "path": "../assets/css/vendors/bootstrap.css",
+        "language": "html"
+      },
+      {
+        "type": "dependency",
+        "tag": "link",
+        "path": "../assets/css/bulk-style.css",
+        "language": "html"
+      },
+      {
+        "type": "dependency",
+        "tag": "link",
+        "path": "../assets/css/style.css",
+        "language": "html"
+      },
+      {
+        "type": "dependency",
+        "tag": "script",
+        "path": "../assets/js/jquery-3.6.0.min.js",
+        "language": "html"
+      },
+      {
+        "type": "dependency",
+        "tag": "script",
+        "path": "../assets/js/bootstrap/bootstrap.bundle.min.js",
+        "language": "html"
+      },
+      {
+        "type": "dependency",
+        "tag": "script",
+        "path": "../assets/js/bootstrap/popper.min.js",
+        "language": "html"
+      },
+      {
+        "type": "dependency",
+        "tag": "script",
+        "path": "../assets/js/feather/feather.min.js",
+        "language": "html"
+      },
+      {
+        "type": "dependency",
+        "tag": "script",
+        "path": "../assets/js/feather/feather-icon.js",
+        "language": "html"
+      },
+      {
+        "type": "dependency",
+        "tag": "script",
+        "path": "../assets/js/slick/slick.js",
+        "language": "html"
+      },
+      {
+        "type": "dependency",
+        "tag": "script",
+        "path": "../assets/js/slick/slick-animation.min.js",
+        "language": "html"
+      },
+      {
+        "type": "dependency",
+        "tag": "script",
+        "path": "../assets/js/slick/custom_slick.js",
+        "language": "html"
+      },
+      {
+        "type": "dependency",
+        "tag": "script",
+        "path": "../assets/js/lazysizes.min.js",
+        "language": "html"
+      },
+      {
+        "type": "dependency",
+        "tag": "script",
+        "path": "../assets/js/script.js",
+        "language": "html"
+      },
+      {
+        "type": "dependency",
+        "tag": "script",
+        "path": "../assets/js/theme-setting.js",
+        "language": "html"
+      }
+    ]
+  },
+  {
+    "file": "C:\\Users\\ADMIN\\Documents\\FlowerShop\\FlowerShop\\src\\main\\resources\\templates\\client\\otp.html",
+    "language": "html",
+    "data": [
+      {
+        "type": "dependency",
+        "tag": "link",
+        "path": "../assets/images/favicon/1.png",
+        "language": "html"
+      },
+      {
+        "type": "dependency",
+        "tag": "link",
+        "path": "https://fonts.gstatic.com/",
+        "language": "html"
+      },
+      {
+        "type": "dependency",
+        "tag": "link",
+        "path": "https://fonts.googleapis.com/css2?family=Public+Sans:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&amp;display=swap",
+        "language": "html"
+      },
+      {
+        "type": "dependency",
+        "tag": "link",
+        "path": "../assets/css/vendors/bootstrap.css",
+        "language": "html"
+      },
+      {
+        "type": "dependency",
+        "tag": "link",
+        "path": "../assets/css/bulk-style.css",
+        "language": "html"
+      },
+      {
+        "type": "dependency",
+        "tag": "link",
+        "path": "../assets/css/style.css",
+        "language": "html"
+      },
+      {
+        "type": "dependency",
+        "tag": "script",
+        "path": "../assets/js/jquery-3.6.0.min.js",
+        "language": "html"
+      },
+      {
+        "type": "dependency",
+        "tag": "script",
+        "path": "../assets/js/bootstrap/bootstrap.bundle.min.js",
+        "language": "html"
+      },
+      {
+        "type": "dependency",
+        "tag": "script",
+        "path": "../assets/js/bootstrap/popper.min.js",
+        "language": "html"
+      },
+      {
+        "type": "dependency",
+        "tag": "script",
+        "path": "../assets/js/otp.js",
+        "language": "html"
+      },
+      {
+        "type": "dependency",
+        "tag": "script",
+        "path": "../assets/js/slick/slick.js",
+        "language": "html"
+      },
+      {
+        "type": "dependency",
+        "tag": "script",
+        "path": "../assets/js/slick/slick-animation.min.js",
+        "language": "html"
+      },
+      {
+        "type": "dependency",
+        "tag": "script",
+        "path": "../assets/js/slick/custom_slick.js",
+        "language": "html"
+      },
+      {
+        "type": "dependency",
+        "tag": "script",
+        "path": "../assets/js/feather/feather.min.js",
+        "language": "html"
+      },
+      {
+        "type": "dependency",
+        "tag": "script",
+        "path": "../assets/js/feather/feather-icon.js",
+        "language": "html"
+      },
+      {
+        "type": "dependency",
+        "tag": "script",
+        "path": "../assets/js/lazysizes.min.js",
+        "language": "html"
+      },
+      {
+        "type": "dependency",
+        "tag": "script",
+        "path": "../assets/js/script.js",
+        "language": "html"
+      },
+      {
+        "type": "code_block",
+        "tag": "script",
+        "startLine": 509,
+        "endLine": 527,
+        "code": "document.addEventListener(\"DOMContentLoaded\", function (event) {\n        const optForm = document.getElementById(\"otpForm\");\n        if (optForm) {\n            optForm.addEventListener(\"submit\", function (event) {\n                const first = document.getElementById(\"first\").value;\n                const second = document.getElementById(\"second\").value;\n                const third = document.getElementById(\"third\").value;\n                const fourth = document.getElementById(\"fourth\").value;\n                const fifth = document.getElementById(\"fifth\").value;\n                const sixth = document.getElementById(\"sixth\").value;\n                const combinedValue = first + second + third + fourth + fifth + sixth;\n                document.getElementById(\"otpInput\").value = combinedValue;\n                console.log(document.getElementById(\"otpInput\").value);\n            })\n        }\n\n    })",
+        "language": "html"
+      }
+    ]
+  },
+  {
+    "file": "C:\\Users\\ADMIN\\Documents\\FlowerShop\\FlowerShop\\src\\main\\resources\\templates\\client\\productDetail.html",
+    "language": "html",
+    "data": [
+      {
+        "type": "dependency",
+        "tag": "link",
+        "path": "../assets/images/favicon/1.png",
+        "language": "html"
+      },
+      {
+        "type": "dependency",
+        "tag": "link",
+        "path": "https://fonts.gstatic.com/",
+        "language": "html"
+      },
+      {
+        "type": "dependency",
+        "tag": "link",
+        "path": "https://fonts.googleapis.com/css2?family=Russo+One&amp;display=swap",
+        "language": "html"
+      },
+      {
+        "type": "dependency",
+        "tag": "link",
+        "path": "https://fonts.googleapis.com/css2?family=Exo+2:wght@400;500;600;700;800;900&amp;display=swap",
+        "language": "html"
+      },
+      {
+        "type": "dependency",
+        "tag": "link",
+        "path": "https://fonts.googleapis.com/css2?family=Public+Sans:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&amp;display=swap",
+        "language": "html"
+      },
+      {
+        "type": "dependency",
+        "tag": "link",
+        "path": "../assets/css/vendors/bootstrap.css",
+        "language": "html"
+      },
+      {
+        "type": "dependency",
+        "tag": "link",
+        "path": "../assets/css/animate.min.css",
+        "language": "html"
+      },
+      {
+        "type": "dependency",
+        "tag": "link",
+        "path": "../assets/css/bulk-style.css",
+        "language": "html"
+      },
+      {
+        "type": "dependency",
+        "tag": "link",
+        "path": "../assets/css/style.css",
+        "language": "html"
+      },
+      {
+        "type": "dependency",
+        "tag": "script",
+        "path": "../assets/js/jquery-3.6.0.min.js",
+        "language": "html"
+      },
+      {
+        "type": "dependency",
+        "tag": "script",
+        "path": "../assets/js/jquery-ui.min.js",
+        "language": "html"
+      },
+      {
+        "type": "dependency",
+        "tag": "script",
+        "path": "../assets/js/bootstrap/bootstrap.bundle.min.js",
+        "language": "html"
+      },
+      {
+        "type": "dependency",
+        "tag": "script",
+        "path": "../assets/js/bootstrap/bootstrap-notify.min.js",
+        "language": "html"
+      },
+      {
+        "type": "dependency",
+        "tag": "script",
+        "path": "../assets/js/bootstrap/popper.min.js",
+        "language": "html"
+      },
+      {
+        "type": "dependency",
+        "tag": "script",
+        "path": "../assets/js/feather/feather.min.js",
+        "language": "html"
+      },
+      {
+        "type": "dependency",
+        "tag": "script",
+        "path": "../assets/js/feather/feather-icon.js",
+        "language": "html"
+      },
+      {
+        "type": "dependency",
+        "tag": "script",
+        "path": "../assets/js/lazysizes.min.js",
+        "language": "html"
+      },
+      {
+        "type": "dependency",
+        "tag": "script",
+        "path": "../assets/js/slick/slick.js",
+        "language": "html"
+      },
+      {
+        "type": "dependency",
+        "tag": "script",
+        "path": "../assets/js/slick/slick-animation.min.js",
+        "language": "html"
+      },
+      {
+        "type": "dependency",
+        "tag": "script",
+        "path": "../assets/js/custom-slick-animated.js",
+        "language": "html"
+      },
+      {
+        "type": "dependency",
+        "tag": "script",
+        "path": "../assets/js/slick/custom_slick.js",
+        "language": "html"
+      },
+      {
+        "type": "dependency",
+        "tag": "script",
+        "path": "../assets/js/ion.rangeSlider.min.js",
+        "language": "html"
+      },
+      {
+        "type": "dependency",
+        "tag": "script",
+        "path": "../assets/js/filter-sidebar.js",
+        "language": "html"
+      },
+      {
+        "type": "dependency",
+        "tag": "script",
+        "path": "../assets/js/quantity-2.js",
+        "language": "html"
+      },
+      {
+        "type": "dependency",
+        "tag": "script",
+        "path": "../assets/js/jquery.elevatezoom.js",
+        "language": "html"
+      },
+      {
+        "type": "dependency",
+        "tag": "script",
+        "path": "../assets/js/zoom-filter.js",
+        "language": "html"
+      },
+      {
+        "type": "dependency",
+        "tag": "script",
+        "path": "../assets/js/timer1.js",
+        "language": "html"
+      },
+      {
+        "type": "dependency",
+        "tag": "script",
+        "path": "../assets/js/sticky-cart-bottom.js",
+        "language": "html"
+      },
+      {
+        "type": "dependency",
+        "tag": "script",
+        "path": "../assets/js/wow.min.js",
+        "language": "html"
+      },
+      {
+        "type": "dependency",
+        "tag": "script",
+        "path": "../assets/js/custom-wow.js",
+        "language": "html"
+      },
+      {
+        "type": "dependency",
+        "tag": "script",
+        "path": "../assets/js/script.js",
+        "language": "html"
+      },
+      {
+        "type": "dependency",
+        "tag": "script",
+        "path": "../assets/js/theme-setting.js",
+        "language": "html"
+      },
+      {
+        "type": "code_block",
+        "tag": "script",
+        "startLine": 2570,
+        "endLine": 2632,
+        "code": "/*\n    *   <div class=\"note-box product-package\">\n                                    <div class=\"cart_qty qty-box product-qty\">\n                                        <div class=\"input-group\">\n                                            <button type=\"button\" class=\"qty-right-plus\" data-type=\"plus\" data-field=\"\">\n                                                <i class=\"fa fa-plus\"></i>\n                                            </button>\n                                            <input class=\"form-control input-number qty-input\" type=\"text\"\n                                                name=\"quantity\" value=\"0\">\n                                            <button type=\"button\" class=\"qty-left-minus\" data-type=\"minus\"\n                                                data-field=\"\">\n                                                <i class=\"fa fa-minus\"></i>\n                                            </button>\n                                        </div>\n                                    </div>\n\n                                    <button onclick=\"location.href = 'cart.html';\"\n                                        class=\"btn btn-md bg-dark cart-button text-white w-100\">Add To Cart</button>\n                                </div>\n*/\n\n    document.addEventListener(\"DOMContentLoaded\", function () {\n        document.querySelectorAll(\".cart_qty\").forEach(\n            cartBox => {\n                const plusBtn = cartBox.querySelector(\".qty-right-plus\")\n                const minusBtn = cartBox.querySelector(\".qty-left-minus\")\n                const input = cartBox.querySelector(\".qty-input\")\n\n                plusBtn.addEventListener(\"click\", function () {\n                    input.value = parseInt(input.value) + 1\n                })\n                minusBtn.addEventListener(\"click\", function () {\n                    if (input.value > 0) {\n                        input.value = parseInt(input.value) - 1\n                    }\n                })\n\n                input.addEventListener(\"change\", function () {\n                    this.value = this.value.replace(/[^0-9]/g, \"\");\n                })\n\n            }\n        );\n    })\n\n    function addToCart(productId, quantity) {\n        console.log(\"productId: \" + productId + \" quantity: \" + quantity);\n        if (quantity <1) {\n            alert(\"Please select quantity greater than 0\");\n            return;\n        }\n        try {\n            fetch(`/cart/addToCart?productId=${productId}&quantity=${quantity}`)\n                .then(response => response.text())\n                .then(data => {\n                    console.log(data);\n                })\n        } catch (error) {\n            console.log(error);\n        }\n    }",
+        "language": "html"
+      }
+    ]
+  },
+  {
+    "file": "C:\\Users\\ADMIN\\Documents\\FlowerShop\\FlowerShop\\src\\main\\resources\\templates\\client\\signUp.html",
+    "language": "html",
+    "data": [
+      {
+        "type": "dependency",
+        "tag": "link",
+        "path": "../assets/images/favicon/1.png",
+        "language": "html"
+      },
+      {
+        "type": "dependency",
+        "tag": "link",
+        "path": "https://fonts.gstatic.com/",
+        "language": "html"
+      },
+      {
+        "type": "dependency",
+        "tag": "link",
+        "path": "https://fonts.googleapis.com/css2?family=Public+Sans:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&amp;display=swap",
+        "language": "html"
+      },
+      {
+        "type": "dependency",
+        "tag": "link",
+        "path": "../assets/css/vendors/bootstrap.css",
+        "language": "html"
+      },
+      {
+        "type": "dependency",
+        "tag": "link",
+        "path": "../assets/css/style.css",
+        "language": "html"
+      },
+      {
+        "type": "dependency",
+        "tag": "script",
+        "path": "../assets/js/jquery-3.6.0.min.js",
+        "language": "html"
+      },
+      {
+        "type": "dependency",
+        "tag": "script",
+        "path": "../assets/js/bootstrap/bootstrap.bundle.min.js",
+        "language": "html"
+      },
+      {
+        "type": "dependency",
+        "tag": "script",
+        "path": "../assets/js/bootstrap/popper.min.js",
+        "language": "html"
+      },
+      {
+        "type": "dependency",
+        "tag": "script",
+        "path": "../assets/js/feather/feather.min.js",
+        "language": "html"
+      },
+      {
+        "type": "dependency",
+        "tag": "script",
+        "path": "../assets/js/feather/feather-icon.js",
+        "language": "html"
+      },
+      {
+        "type": "dependency",
+        "tag": "script",
+        "path": "../assets/js/slick/slick.js",
+        "language": "html"
+      },
+      {
+        "type": "dependency",
+        "tag": "script",
+        "path": "../assets/js/slick/slick-animation.min.js",
+        "language": "html"
+      },
+      {
+        "type": "dependency",
+        "tag": "script",
+        "path": "../assets/js/slick/custom_slick.js",
+        "language": "html"
+      },
+      {
+        "type": "dependency",
+        "tag": "script",
+        "path": "../assets/js/lazysizes.min.js",
+        "language": "html"
+      },
+      {
+        "type": "dependency",
+        "tag": "script",
+        "path": "../assets/js/script.js",
+        "language": "html"
+      }
+    ]
+  },
+  {
+    "file": "C:\\Users\\ADMIN\\Documents\\FlowerShop\\FlowerShop\\src\\test\\java\\com\\flowerShop\\FlowerShopApplicationTests.java",
+    "language": "java",
+    "data": [
+      {
+        "type": "method",
+        "name": "contextLoads",
+        "startLine": 9,
+        "endLine": 11,
+        "docstring": "",
+        "code": "@Test\n    void contextLoads() {\n    }",
+        "imports": [
+          "org.junit.jupiter.api.Test",
+          "org.springframework.boot.test.context.SpringBootTest"
+        ],
+        "language": "java"
+      }
+    ]
+  }
+]
